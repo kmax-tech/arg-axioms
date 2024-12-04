@@ -1,0 +1,10 @@
+.venv
+.venvflask
+__pycache__
+_*
+.env
+*.pyc
+!__init__.py
+.idea
+.DS_Store
+storage-2024-10-31

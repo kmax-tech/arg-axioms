@@ -1,0 +1,11 @@
+
+group_key = 'GROUP'
+rank_column_key = 'RANK'
+rank_column_raw_key = 'RANK_RAW'
+axiom_key = 'AXIOM'
+axioms_to_display_key = 'AXIOMS_TO_DISPLAY'
+name_key = 'NAME'
+score_key = 'SCORE'
+score_raw_key = 'SCORE_RAW'
+difference_key = 'DIFFERENCE'
+significant_key = 'SIGNIFICANT'
