@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-PROJECT_ROOT=Path('/Users/max/projects/axiomatic-reranking')
+PROJECT_ROOT = Path(__file__).resolve().parent
 
 axioms_cache_embeddings = PROJECT_ROOT / '_axioms_cache_embeddings'
 cache_dir = axioms_cache_embeddings
@@ -81,7 +81,7 @@ server_embedding_url = 'http://localhost:{}/get_embedding'.format(server_port)
 
 # Terms for Saving
 SAVE_PATH = '_experiments_results_raw'
-SAVE_PATH_CLUSTER ="/Volumes/users/storage/data-tmp/current/huvi7201/arg-axioms-llama-annotation/data"
+SAVE_PATH_CLUSTER ="/data"
 
 # TERMS FOR TOUCHE
 TOUCHE_DIR = None
@@ -96,7 +96,7 @@ GEMINI_MODEL = "gemini-1.5-flash-002"
 CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
 TOP_P = 0.1
 TEMPERATURE = 0.2
-GEMINI_CRED = '/Users/max/projects/argument-classification-walton-schemes/cred/argu-walton-class-gen-e8a22ff2d56d.json'
+GEMINI_CRED = 'gemini-cred'
 
 # TERMS FOR TARGER EMBEDDINGS, are stored in TASK_INFO dict
 TASK_INFO_TARGER_OWN_SENTENCIZER= 'TARGER_OWN_SENTENCIZER'

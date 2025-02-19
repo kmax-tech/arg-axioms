@@ -141,8 +141,8 @@ if __name__ == '__main__':
     ev10_score, ev10_substracted, effec10 = create_data(eval_top_10)
 
     # fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(10, 12))
-    calculate_similarity_difference(ev5_substracted,"NDCG5",None,effect=effect5)
-    #calculate_similarity_difference(ev10_substracted,"NDCG10",None,effect=effec10)
+    #calculate_similarity_difference(ev5_substracted,"NDCG5",None,effect=effect5)
+    calculate_similarity_difference(ev10_substracted,"NDCG10",None,effect=effec10)
 
     plt.tight_layout()
     # Save the figure containing both plots.
