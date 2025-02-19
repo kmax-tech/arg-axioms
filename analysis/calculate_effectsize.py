@@ -2,9 +2,9 @@ import numpy as np
 from numpy import var
 from math import sqrt
 from utils.save_runs import load_runs
-from axioms.axioms_names import arg_axiom_list,arg_axiom_name_list,old_axioms,old_axioms_names
+from axioms.axioms_names import arg_axiom_list_new_axioms,arg_axiom_name_list_new_axioms,axiom_list_old_axioms,axioms_name_list_new_axioms
 from scipy import stats
-experiment = load_runs('dirichletlm-reranking-touche20-top10-effectsize')
+experiment = load_runs('dirichletlm-reranking-touche21-top10-effectsize')
 
 baseline = 'baseline-dirichlet'
 
@@ -32,11 +32,11 @@ def cohend(d1,d2):
 	# calculate the effect size
 	return (u1 - u2) / s
 
+
 significant_ndcg5 = []
 significant_ndcg10 = []
 
-for name in arg_axiom_name_list :
-
+for name in arg_axiom_name_list_new_axioms :
 
     axiom_ndcg5 = experiment[(experiment['name'] == name) & (experiment['measure'] == 'nDCG@5')][
         'value'].values

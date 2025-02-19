@@ -6,7 +6,7 @@ from collections import defaultdict
 
 import re
 
-general_llm_promt_instructions = \
+general_llm_prompt_instructions = \
 """You are given a topic, a document, the title of the document and guidelines for annotation.
 Please follow the annotation guidelines and return the appropriate relevance and quality annotations.
 Give your answer exactly according to the following pattern, where the words “RELEVANCE” and “QUALITY” indicate the values you have chosen for relevance and quality:
@@ -46,8 +46,6 @@ def average_scores(annotation , label_scores,prefix='') :
         return prefix + '0'
     else :
         return prefix +'x'
-
-
 
 
 def majority_voting(annotations) :
@@ -120,7 +118,7 @@ def query_llm(data_dict):
     with open(instructions_path, 'r') as file:
         annotation_guidelines = file.read()
     data_dict['annotation_guidelines'] = annotation_guidelines
-    instructions = general_llm_promt_instructions.format(**data_dict)
+    instructions = general_llm_prompt_instructions.format(**data_dict)
     qid = data_dict['qid']
     docno = data_dict['docno']
 

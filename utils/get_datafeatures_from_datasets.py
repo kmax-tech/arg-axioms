@@ -7,6 +7,7 @@ import settings as s
 import pickle
 import pandas as pd
 from loguru import logger
+import re
 
 location_storage = s.PROJECT_ROOT / '_storage'
 
@@ -26,7 +27,7 @@ def filter_out_irrelevant_qrels(df):
         collect_docids.append(docid)
     df['docid'] = collect_docids
 
-    df_merged_only_docs_in_index = df[df['docid'] != -1] # filter out invalid docnos
+    df_merged_only_docs_in_index = df[df['docid'] != -1] # filter out docnos not in the index
     df_merged_only_docs_in_index = df_merged_only_docs_in_index.drop('docid', axis=1)
 
     print(f"Filtered out {len(df) - len(df_merged_only_docs_in_index)} documents that are not in the index")
@@ -37,45 +38,53 @@ def filter_out_irrelevant_qrels(df):
 
     return df_merged_only_docs_in_index
 
+def get_qrels_llm_annotation():
+    path_to_data_llm_judgments = location_storage / 'data_qrels' / (s.dataset_short + '_llm_annotation.pkl')
 
+    data_qrels_llm = None
+    if path_to_data_llm_judgments.exists():
+        with open(path_to_data_llm_judgments, "rb") as pickle_file :
+            data_qrels_llm = pickle.load(pickle_file)
 
+    if data_qrels_llm is not None :
+        data_qrels_llm['label'] = data_qrels_llm['relevance_llm']
+        data_qrels_llm['quality'] = data_qrels_llm['quality_llm']
+        assert len(s.LLMS_TO_USE) == 1
+        name = s.LLMS_TO_USE[0]
+        if name == s.CLAUDE :
+            criteria = 'relevance_claude'
+        assert data_qrels_llm[criteria].tolist() == data_qrels_llm['label'].tolist()
+    return data_qrels_llm
 
-def get_qrels(just_human=False,ignore_qrels_to_use=False):
+def get_qrels_human_annotation():
+    path_to_data_human_judgments = location_storage / 'data_qrels' / (s.dataset_short + '.pkl')
+    os.makedirs(path_to_data_human_judgments.parent, exist_ok=True)
+    if path_to_data_human_judgments.exists():
+        with open(path_to_data_human_judgments , "rb") as pickle_file :
+            data_qrels = pickle.load(pickle_file) # includes human knowledge
 
-    if (s.QRELS_TO_USE is not None) and not ignore_qrels_to_use:
-        return s.QRELS_TO_USE
-
-    path_to_data = location_storage / 'data_qrels' / (s.dataset_short + '.pkl')
-    path_to_data_llm = location_storage / 'data_qrels' / (s.dataset_short + '_llm_annotation.pkl')
-
-    os.makedirs(path_to_data.parent, exist_ok=True)
-
-    if path_to_data.exists():
-        with open(path_to_data , "rb") as pickle_file :
-            data_qrels = pickle.load(pickle_file)
-
-        data_qrels_llm = None
-        if path_to_data_llm.exists() and not just_human:
-            with open(path_to_data_llm , "rb") as pickle_file :
-                data_qrels_llm = pickle.load(pickle_file)
-        if data_qrels_llm is not None:
-            data_qrels_llm['label'] = data_qrels_llm['relevance_llm']
-            data_qrels_llm['quality'] = data_qrels_llm['quality_llm']
-            if len(s.LLMS_TO_USE) == 1:
-                name = s.LLMS_TO_USE[0]
-                if name == s.CLAUDE:
-                    criteria = 'relevance_claude'
-                assert data_qrels_llm[criteria].tolist() == data_qrels_llm['label'].tolist()
-
-            data_qrels = pd.concat([data_qrels , data_qrels_llm] , ignore_index=True)
-
-    else:
-
+    else :
         dataset = get_dataset(f'irds:{s.dataset}')
         data_qrels = dataset.get_qrels()
         data_qrels = filter_out_irrelevant_qrels(data_qrels)
-        with open(path_to_data , "wb") as pickle_file :
-            pickle.dump(data_qrels , pickle_file)
+        with open(path_to_data_human_judgments, "wb") as pickle_file :
+            pickle.dump(data_qrels, pickle_file)
+    return data_qrels
+
+
+def get_qrels(just_human_qrels=False, ignore_qrels_to_use=False):
+
+    if (s.QRELS_TO_USE_DF is not None) and not ignore_qrels_to_use:
+        return s.QRELS_TO_USE_DF
+
+    data_qrels_human = get_qrels_human_annotation()
+    data_qrels = data_qrels_human
+
+    if not just_human_qrels and not s.ONLY_HUMAN_QRELS:
+        logger.info("Getting existing LLM annotations")
+        data_qrels_llm = get_qrels_llm_annotation()
+        if data_qrels_llm is not None:
+            data_qrels = pd.concat([data_qrels , data_qrels_llm] , ignore_index=True)
 
     qrels = data_qrels[['qid','docno','label']].copy()
     qrels.loc[: , "label"] = qrels["label"].replace({-2 : 0})
@@ -85,6 +94,11 @@ def get_qrels(just_human=False,ignore_qrels_to_use=False):
 def process_touche20(df):
     df['query'] = df['text'].str.lower().str.replace(r'[.?!]' , '' , regex=True)
     return df
+
+# do formatting for single involved string
+def process_topic_entry(entry):
+    entry_form = re.sub(r'[.?!]', '', entry.lower())  # Remove punctuation using regex
+    return entry_form
 
 def get_dataset_queries():
     path_to_data = location_storage / 'data_topics' / (s.dataset_short + '.pkl')
@@ -96,23 +110,25 @@ def get_dataset_queries():
 
     dataset = get_dataset(f'irds:{s.dataset}')
     queries = dataset.get_topics()
-    if s.dataset_short == 'touche20':
+
+    if s.dataset_short == 'touche20': # do additional processing for Touche20
         queries = process_touche20(queries)
 
     with open(path_to_data , "wb") as pickle_file :
         pickle.dump(queries , pickle_file)
     return queries[['qid','query']]
-# get overview hom qrels are from human for this dataset, how many are from LLM
-def get_qrel_stats(df,):
+
+# get overview hom many QRELS are from human for this dataset, how many are from LLM
+def get_qrels_human_llm_stats(df):
 
     path_to_data = location_storage / 'data_qrels' / (s.dataset_short + '.pkl')
     os.makedirs(path_to_data.parent, exist_ok=True)
 
     all_qrels_df = get_qrels(ignore_qrels_to_use=True)
-    all_qrels_human_df = get_qrels(just_human=True,ignore_qrels_to_use=True)
+    all_qrels_human_df = get_qrels(just_human_qrels=True, ignore_qrels_to_use=True)
 
-    if s.QRELS_TO_USE is not None: # we have to adjust the included datasets
-        all_qrels_df = s.QRELS_TO_USE
+    if s.QRELS_TO_USE_DF is not None: # we have to adjust the included datasets
+        all_qrels_df = s.QRELS_TO_USE_DF
 
     llm_annotation_df_tmp = all_qrels_df.merge(all_qrels_human_df , on=['qid' , 'docno'] , how='left', indicator=True)
     llm_annotation_df = llm_annotation_df_tmp[llm_annotation_df_tmp['_merge'] == 'left_only'].drop(columns=['_merge'])
@@ -141,6 +157,7 @@ def get_qrel_stats(df,):
     logger.info(f"Retriever Qrels: {count_merge_retriever_all_df}")
     logger.info(f"Retriever Qrels Human: {len(df)-count_merge_retriever_llm_df}")
     logger.info(f"Retriever Qrels LLM: {count_merge_retriever_llm_df}")
+
 
 def update_dataset_llm_qrels(data_dict):
     path_to_data_llm = location_storage / 'data_qrels' / (s.dataset_short + '_llm_annotation.pkl')

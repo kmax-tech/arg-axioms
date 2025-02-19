@@ -1,7 +1,7 @@
 import settings
 from utils.save_runs import save_runs,load_runs
 import utils.repair_result_dataframe as rd
-from axioms.axioms_names import arg_axiom_list,arg_axiom_name_list,old_axioms,old_axioms_names
+from axioms.axioms_names import arg_axiom_list_new_axioms,arg_axiom_name_list_new_axioms,axiom_list_old_axioms,axioms_name_list_new_axioms
 from experiments.utils.reranking_skeleton import re_rank_argu_axioms
 from ir_axioms.backend.pyterrier.transformers import KwikSortReranker,RandomPivotSelection
 
@@ -12,9 +12,9 @@ if __name__ == '__main__':
 
     settings.set_data_manually('touche21')
     # do reranking for touche21 participants, with the new involved axioms
-    experiment_name = 'touche-21-reranking-rep2'
+    experiment_name = 'touche21-rerank-top10-human-eval'
 
-    base_run_data_list = load_runs('touche-21-base_evaluation')
+    base_run_data_list = load_runs('touche-21-base_evaluation-human-eval')
     rerank_nbr = 10 # number of documents to rerank
 
     cmp_nbr = None
@@ -29,22 +29,19 @@ if __name__ == '__main__':
         if data[2] >= cmp_nbr: # only use the runs which are better than the baseline
             group = data[0]
             best_run = data[3]
-            rd.adjust_retrieval_results_dataframe_repair_get_missing(best_run, rerank_nbr)
+            rd.adjust_retrieval_results_dataframe_drop_missing(best_run)
             best_runs.append((group,best_run))
 
-    # adjust the underlying qrels
-    best_runs_adj = [x[1] for x in best_runs]
-    rd.set_retrieval_results_qrels_top_n(best_runs_adj, rerank_nbr)
 
     metrics = [ir_measures.nDCG(judged_only=True) @ 5, ir_measures.nDCG(judged_only=True) @ 10, ir_measures.nDCG() @ 5,
                ir_measures.nDCG() @ 10]
     metric_names = ['nDCG(judged_only=True)@5', 'nDCG(judged_only=True)@10', 'nDCG@5', 'nDCG@10']
 
-    axioms =  arg_axiom_list
-    axioms_names = arg_axiom_name_list
+    axioms =  arg_axiom_list_new_axioms
+    axioms_names = arg_axiom_name_list_new_axioms
 
     re_ranked_data_participants = []
-    for group, df in best_runs:
+    for group, df in best_runs: # loop through all groups and save data as dict
         experiment_group = re_rank_argu_axioms(group,
                                          df,
                                          axioms=axioms,

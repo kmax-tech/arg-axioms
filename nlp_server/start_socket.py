@@ -191,7 +191,7 @@ def handle_document_ranking(received_data):
     document2 = received_data[s.SOCKET_DOCUMENT2]
     query = received_data[s.SOCKET_QUERY]
 
-    # queries shall never be converted to AUS
+    # queries shall never be converted to AUS, therefore default setting is performed
     query[s.SOCKET_IDENTIFIER] = s.IDENT_SENTENCES
     query[s.SOCKET_SENTENIZE] = False
 

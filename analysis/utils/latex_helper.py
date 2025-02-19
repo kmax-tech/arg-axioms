@@ -1,7 +1,7 @@
 import re
 import pandas as pd
 from collections import defaultdict
-from axioms.axioms_names import arg_axiom_list,arg_axiom_name_list,old_axioms,old_axioms_names
+from axioms.axioms_names import arg_axiom_list_new_axioms,arg_axiom_name_list_new_axioms,axiom_list_old_axioms,axioms_name_list_new_axioms
 from utils.save_runs import load_runs
 
 maximum_characters_per_line = 70

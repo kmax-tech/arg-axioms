@@ -1,3 +1,5 @@
+import sys
+
 import requests
 import settings as s
 from typing import Tuple, AnyStr, Any
@@ -21,6 +23,8 @@ def transmission_dict(id=None , document=None , embedding_style=None , sentenize
 
 def document_ranking_socket_sent(document1_data , document2_data , query_data , comparison,task=None):
     if task is None:
+        #sys.exit("Task is not defined")
+        #print("Task is not defined")
         task = s.DOCUMENT_RANKING
     data = {
         s.TASK : task,
@@ -95,7 +99,6 @@ if __name__ == "__main__":
 
     x = sent_embedding_request(id="123", document="Some text to embed. Evenmore things to embedd.", embedding_style=s.SBERT, sentence_style=s.sentences, sentenize=True)
     x_de = deserialize_embedding(x)
-
     def dump_data(data , name) :
         with open(s.root / name , 'wb') as file :
             pickle.dump(data , file)

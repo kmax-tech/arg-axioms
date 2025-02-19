@@ -1,5 +1,3 @@
-
-
 from sentence_transformers import SentenceTransformer
 from targer_api import (
     ArgumentSentences, ArgumentLabel, ArgumentTag, analyze_text

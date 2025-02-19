@@ -47,7 +47,7 @@ if __name__ == '__main__':
     dirichletLM_result = dirichletLM.transform(gdf.get_dataset_queries())
 
     rd.adjust_retrieval_results_dataframe(dirichletLM_result,ndcg_nbr)
-    filtered_df = rd.adjust_drop_missing_docnos(dirichletLM_result)
+    filtered_df = rd.adjust_retrieval_results_dataframe_drop_missing(dirichletLM_result)
     filtered_df_transform = base_transformers(filtered_df)
 
 

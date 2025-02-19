@@ -17,7 +17,7 @@ def re_rank_argu_axioms_effectsize(group_name, df, axioms=None, axioms_names=Non
         pt.java.init()
 
     filtered_df = rd.cut_retrieval_results_top_n(df, rerank_nbr)
-    gdf.get_qrel_stats(filtered_df) # print general qrel stats, for this experiment
+    gdf.get_qrels_human_llm_stats(filtered_df) # print general qrel stats, for this experiment
 
     filtered_df_transform = ResultTransformer(filtered_df)
     rerank_initial = kwiksort(filtered_df_transform, axioms,rerank_nbr)

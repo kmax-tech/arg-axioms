@@ -10,6 +10,8 @@ PROJECT_ROOT=Path('/Users/max/projects/axiomatic-reranking')
 axioms_cache_embeddings = PROJECT_ROOT / '_axioms_cache_embeddings'
 cache_dir = axioms_cache_embeddings
 
+ADDITIONAL_QREL_LOCATION = PROJECT_ROOT / '_manual_judgements'
+
 dotenv_path = PROJECT_ROOT / '.env'
 load_dotenv(dotenv_path)
 dataset_name = os.environ.get("dataset")
@@ -31,9 +33,6 @@ def set_data_manually(dataset_name): # in case data is specified manually
     dataset = data['dataset']
     dataset_short = data['dataset_short']
     dataset_index_dir = PROJECT_ROOT / f'_{dataset_short}_index'
-
-
-
 
 dotenv_path = PROJECT_ROOT / '.env'
 load_dotenv(dotenv_path)
@@ -77,14 +76,18 @@ request = 'request'
 socket = 'socket'
 server_communication_method = socket # specify communications style with Embeddings Getter
 
-server_port = 8080
+server_port = 8085
 server_embedding_url = 'http://localhost:{}/get_embedding'.format(server_port)
 
 # Terms for Saving
 SAVE_PATH = '_experiments_results_raw'
+SAVE_PATH_CLUSTER ="/Volumes/users/storage/data-tmp/current/huvi7201/arg-axioms-llama-annotation/data"
 
 # TERMS FOR TOUCHE
 TOUCHE_DIR = None
+
+
+ADDITIONAL_QREL_FILE_ENDING = "additional_qrels.pkl"
 
 
 # TERMS FOR LLM PROMPTING
@@ -113,7 +116,10 @@ SOCKET_DOCUMENT = 'SOCKET_DOCUMENT'
 
 # Settings for Evaluation of QRELS
 ONLY_HUMAN_QRELS = True
-QRELS_TO_USE = None
+
+QRELS_TO_USE_DF = None
+LLM_ANNOTATION = False
+
 
 # Terms for specifying the type llms
 CLAUDE = 'claude'
@@ -125,3 +131,4 @@ LLMS_TO_USE = ['claude']
 NBR_PROCESSES = 0
 
 TARGER_TOTAL_TRIES = 3
+

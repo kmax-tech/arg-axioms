@@ -7,14 +7,15 @@ import utils.repair_result_dataframe as rd
 import ir_measures
 import settings as s
 import utils.get_datafeatures_from_datasets as gdf
-from axioms.axioms_names import arg_axiom_list,arg_axiom_name_list,old_axioms,old_axioms_names
+import axioms.axioms_names as an
+from axioms.axioms_names import arg_axiom_list_new_axioms,arg_axiom_name_list_new_axioms,axiom_list_old_axioms,axioms_name_list_new_axioms
 from experiments.utils.reranking_skeleton import re_rank_argu_axioms
 import utils.save_runs as sr
 
 if __name__ == '__main__':
     s.set_data_manually('touche21')
 
-    experiment_name = 'dirichletlm-reranking-touche21-top10'
+    experiment_name = 'dirichletlm-baseline-reranking-touche21-top10-human-eval'
 
     indexref = pt.IndexRef.of(str(s.dataset_index_dir))
     index = pt.IndexFactory.of(indexref)
@@ -27,17 +28,20 @@ if __name__ == '__main__':
     dirichletLM = pt.terrier.Retriever(str(s.dataset_index_dir) , wmodel="DirichletLM")
     res_df = dirichletLM.transform(queries)
 
+    res_df = rd.adjust_retrieval_results_dataframe_drop_missing(res_df) # cut df to human judgments only
     res_df = rd.cut_retrieval_results_top_n(res_df, rerank_nbr)
-
-    rd.adjust_retrieval_results_dataframe_repair_get_missing(res_df,rerank_nbr) # fix missing judgements
-    rd.set_retrieval_results_qrels_top_n(res_df, rerank_nbr) # Fix available qrels for this point
+    if res_df is None:
+        print("No results to rerank")
+        exit()
 
     metrics = [ir_measures.nDCG(judged_only=True)@5,ir_measures.nDCG(judged_only=True)@10,ir_measures.nDCG()@5,ir_measures.nDCG()@10]
     metric_names = ['nDCG(judged_only=True)@5','nDCG(judged_only=True)@10','nDCG@5','nDCG@10']
 
-    axioms = arg_axiom_list + old_axioms
-    axioms_names = arg_axiom_name_list + old_axioms_names
+    axioms = arg_axiom_list_new_axioms + axiom_list_old_axioms
+    axioms_names = arg_axiom_name_list_new_axioms + axioms_name_list_new_axioms
 
+    #axioms = [an.QArgSim_max_exact_sbert_full_document()]
+    #axioms_names = ["QArgSim_max_exact_sbert_full_document"]
     experiment = re_rank_argu_axioms('DirichletLM',
                                      res_df,
                                      axioms=axioms,

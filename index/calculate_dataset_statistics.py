@@ -1,30 +1,12 @@
-from pyterrier import init, started, set_property
-if not started():
-    init()
-set_property("metaindex.compressed.reverse.allow.duplicates", "true")
-from pyterrier.datasets import get_dataset
-from pyterrier.batchretrieve import BatchRetrieve
-from pathlib import Path
-from ir_axioms.backend.pyterrier.experiment import AxiomaticExperiment
-from ir_measures import nDCG, Bpref
-from pyterrier.index import IterDictIndexer
+import pyterrier as pt
+if not pt.java.started() :
+    pt.java.init()
+#set_property("metaindex.compressed.reverse.allow.duplicates", "true")
+
 import pandas as pd
 from tabulate import tabulate
 import string
-from nltk.tokenize import sent_tokenize
-
-
-dataset_name = "argsme/2020-04-01/touche-2021-task-1"
-dataset = get_dataset(f"irds:{dataset_name}")
-
-
-docnos = dataset.get_qrels()["docno"].values
-
-
-def generate_filter_qrels():
-    for d in dataset.get_corpus_iter():
-        if (d["docno"] in docnos):
-            yield d
+import settings as s
 
 def calculate_values(data):
 
@@ -56,40 +38,37 @@ def calculate_values(data):
             ("Std.", data_std[0]) ]
     return cols_dict
 
-
-
 if __name__ == "__main__":
+        s.set_data_manually('touche21')
+        indexref = pt.IndexRef.of(str(s.dataset_index_dir))
+        index = pt.IndexFactory.of(indexref)
 
-    calculate_values([1,2,3])
+        iter = index.get_corpus_iter()
+        for x in iter:
+            if x['docno'] == 'S9c060533-Ab2574a02':
+                print(x)
 
-    total_length = []
+        meta = index.getMetaIndex()
 
-    for x in generate_filter_qrels():
-        premise = x["premises_texts"]
-        translator = str.maketrans("", "", string.punctuation)
-        clean_sentence = premise.lower().translate(translator)
-        words = clean_sentence.split()
-        words_nbr = len(words)
+        # Retrieve all documents from the index
+        for docno in range(0,10) :
+            dat = meta.getDocument('docno', str(docno))
 
-        total_length.append(words_nbr)
+        doc = index.get_document(docid)
+        print(doc)
+        interesting_fields = 'S9c060533-Ab2574a02'
+        calculate_values([1,2,3])
+        total_length = []
 
-    res = calculate_values(total_length)
-    x = tabulate(res,tablefmt="latex_raw", headers=["Metric", "Nbr. of Words"])
-    print(x)
+        for x in generate_filter_qrels():
+            premise = x["premises_texts"]
+            translator = str.maketrans("", "", string.punctuation)
+            clean_sentence = premise.lower().translate(translator)
+            words = clean_sentence.split()
+            words_nbr = len(words)
+            total_length.append(words_nbr)
 
-"""
-dirichletLM = BatchRetrieve(str(index_dir.absolute()), wmodel="DirichletLM")
+        res = calculate_values(total_length)
+        x = tabulate(res,tablefmt="latex_raw", headers=["Metric", "Nbr. of Words"])
+        print(x)
 
-experiment = AxiomaticExperiment(
-    retrieval_systems=[dirichletLM],
-    topics=dataset.get_topics(),
-    qrels=dataset.get_qrels(),
-    index=index_dir,
-    axioms=[],
-    cache_dir=cache_dir,
-    depth=5,
-    filter_by_qrels=False,
-)
-with open(Path(__file__).parent / "test.txt", "w") as t:
-    t.write(experiment.preferences.to_string())
-"""

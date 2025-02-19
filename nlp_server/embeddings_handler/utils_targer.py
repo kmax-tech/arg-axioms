@@ -54,7 +54,7 @@ def filter_targer(text):
         return False
     return True
 
-def get_targer_annotation_full_document(document) :
+def get_targer_annotation_full_document(document) : # get the Targer annotations for the full document
     final_annotations = []
     if isinstance(document,list):
         document = ' '.join(document)

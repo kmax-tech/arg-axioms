@@ -2,6 +2,7 @@ from utils.save_runs import load_runs
 
 import pandas as pd
 
+# is used for comparing several dataframes
 def compare_dataframes(df1, df2):
     """
     Compares two DataFrames row by row.

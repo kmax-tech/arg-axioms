@@ -32,8 +32,8 @@ if __name__ == '__main__':
 
    text = ['Hello there.' , 'General Kenobi.']
    query = ['Obi Wan.']
-   #embeddings = Embedder.get_embedding(text)
-   #query_embedding = Embedder.get_embedding(query)
+   embeddings = Embedder.get_embedding(text)
+   query_embedding = Embedder.get_embedding(query)
    query_embedding2 = Embedder.get_embedding(' ')
 
    doc1_similarity = [cosine_similarity(query_embedding , vector.reshape(1 , -1)) for vector in embeddings]
